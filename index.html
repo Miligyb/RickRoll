@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка безопасности</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Экран с капчей */
+        #captcha-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        h1 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        .arrow {
+            font-size: 35px;
+            color: #4c8bf5;
+            margin-bottom: 20px;
+            animation: bounce 1.5s infinite;
+        }
+
+        /* Стилизация фейковой reCAPTCHA v2 */
+        .fake-captcha {
+            width: 304px;
+            height: 78px;
+            background-color: #f9f9f9;
+            border: 1px solid #d3d3d3;
+            border-radius: 3px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+
+        .fake-captcha:hover {
+            border-color: #b8b8b8;
+            background-color: #f5f5f5;
+        }
+
+        .captcha-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-wrapper {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            margin-right: 12px;
+        }
+
+        .fake-checkbox {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #c1c1c1;
+            border-radius: 2px;
+            background-color: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .captcha-text {
+            font-size: 14px;
+            color: #222;
+            font-weight: 400;
+        }
+
+        .captcha-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+        }
+
+        .recaptcha-logo {
+            width: 32px;
+            height: 32px;
+            background-image: url('https://www.gstatic.com/recaptcha/api2/logo_48.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            margin-bottom: 20px; /* Сдвигаем логотип немного вверх */
+        }
+
+        .captcha-links {
+            font-size: 8px;
+            color: #555;
+            text-decoration: none;
+            line-height: 1.2;
+            text-align: center;
+            margin-top: -15px;
+        }
+
+        .captcha-links span {
+            color: #555;
+        }
+
+        /* Экран с видео (скрыт изначально) */
+        #video-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 9999;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Видео растягивается на весь экран */
+        }
+
+        /* Анимации */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="captcha-container">
+        <h1>Чтобы участвовать в розыгрыше, пройдите проверку</h1>
+        <div class="arrow">⬇️</div>
+        
+        <div class="fake-captcha" id="captcha-box">
+            <div class="captcha-left">
+                <div class="checkbox-wrapper">
+                    <div class="fake-checkbox" id="checkbox"></div>
+                </div>
+                <div class="captcha-text">Я не робот</div>
+            </div>
+            <div class="captcha-right">
+                <div class="recaptcha-logo"></div>
+                <div class="captcha-links">
+                    Конфиденциальность<br><span>Условия использования</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="video-container">
+        <video id="rick-video" src="roll.mp4" playsinline></video>
+    </div>
+
+    <script>
+        const captchaBox = document.getElementById('captcha-box');
+        const checkbox = document.getElementById('checkbox');
+        const captchaContainer = document.getElementById('captcha-container');
+        const videoContainer = document.getElementById('video-container');
+        const video = document.getElementById('rick-video');
+
+        captchaBox.addEventListener('click', () => {
+            // 1. Визуально "активируем" чекбокс перед взрывом
+            checkbox.style.borderColor = '#4c8bf5';
+            checkbox.style.backgroundColor = '#fff';
+            
+            // Маленькая задержка в 200мс для реалистичности клика
+            setTimeout(() => {
+                // 2. Скрываем капчу и показываем видео
+                captchaContainer.style.display = 'none';
+                videoContainer.style.display = 'block';
+                
+                // 3. Запускаем видео на полную громкость
+                video.volume = 1.0;
+                video.play().catch(error => {
+                    console.log("Ошибка воспроизведения:", error);
+                });
+
+                // 4. Запрашиваем полноэкранный режим (опционально, но так эффектнее)
+                if (videoContainer.requestFullscreen) {
+                    videoContainer.requestFullscreen();
+                } else if (videoContainer.webkitRequestFullscreen) { /* Safari */
+                    videoContainer.webkitRequestFullscreen();
+                }
+            }, 200);
+        });
+
+        // Если жертва попытается выйти из полноэкранного режима, видео продолжит играть
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                // Оставляем видео на весь экран встроенными стилями, если вышли из fullscreen
+                videoContainer.style.position = 'fixed';
+            }
+        });
+    </script>
+</body>
+</html>
